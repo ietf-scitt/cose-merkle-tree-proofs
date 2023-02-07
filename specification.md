@@ -115,7 +115,10 @@ TODO: maybe rename `extra_data`
 
 ### Signed Merkle Tree Multiproof
 
-TODO: define a multi-leaf variant of a signed Merkle tree proof like in https://transmute-industries.github.io/merkle-disclosure-proof-2021/
+TODO: define a multi-leaf variant of a signed Merkle tree proof like in:
+
+- https://github.com/transmute-industries/merkle-proof
+- https://transmute-industries.github.io/merkle-disclosure-proof-2021/
 
 TODO: consider using sparse multiproofs, see https://medium.com/@jgm.orinoco/understanding-sparse-merkle-multiproofs-9b9f049e8f08 and https://arxiv.org/pdf/2002.07648.pdf
 
