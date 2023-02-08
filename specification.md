@@ -92,7 +92,7 @@ TODO: How are the two types of inclusion paths distinguished?
 
 TODO: Define root computation algorithm for each inclusion path type
 
-TODO: Do we need both inclusion path types? what properties does each type have?
+TODO: [Do we need both inclusion path types? what properties does each type have?](https://github.com/ietf-scitt/cose-merkle-tree-proofs/issues/6)
 
 TODO: Should the inclusion path be opaque (bstr) and fixed by the tree algorithm? It seems this is orthogonal and the choice of inclusion path type should be application-specific.
 
