@@ -132,6 +132,7 @@ Reserved        | 0     |
 CCF_SHA256      | 1     | CCF with SHA-256
 RFC6962_SHA256  | 2     | RFC6962 with SHA-256
 RFC6962_BL_SHA256  | 3     | RFC6962 with blinding and SHA-256
+OZ_Keccak256    | 5     | Open Zeppelin with keccak256
 
 Each tree algorithm defines how to compute the root node from a sequence of leaves each represented by payload and extra data. Extra data is algorithm-specific and should be considered opaque.
 
@@ -190,3 +191,15 @@ with extra data defined as:
 ```c
 ExtraData = bstr .size 32  ; nonce
 ```
+
+### OZ_keccak256
+
+For n > 1 inputs, let k be the largest power of two smaller than n.
+
+```c
+MTH({d(0)}) = keccak256(keccak256(d(0)))
+MTH(D[n]) = keccak256(DOT(MTH(D[0:k]), MTH(D[k:n])))
+DOT(H1, H2) = if H1 < H2 then H1 || H2 else H2 || H1
+```
+
+where `d(0)` is the payload. This algorithm takes no extra data.
