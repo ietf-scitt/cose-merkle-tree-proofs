@@ -80,7 +80,10 @@ PathEntry = [
 ]
 ```
 
+For some tree algorithms, like QLDB, the direction is derived from the hashes themselves and both the index and direction can be left out in the path:
+
 ```c
+; TODO: find a better name for this
 UndirectionalInclusionPath = [+ bstr]
 ```
 
