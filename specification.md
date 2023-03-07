@@ -64,27 +64,26 @@ Note: The payload is just the raw Merkle tree root hash (and not some wrapper st
 If the tree size and leaf index is known, then a compact inclusion path variant can be used:
 
 ```c
-IndexAwareInclusionPath = [
+IndexAwareInclusionPath = #6.1234([
     leaf_index: int
     hashes: [+ bstr]
-]
+])
 ```
 
 Otherwise, the direction for each path step must be included:
 
 ```c
-IndexUnawareInclusionPath = [+ PathEntry]
-PathEntry = [
-    left: bool
-    hash: bstr
-]
+IndexUnawareInclusionPath = #6.1235([
+    hashes: [+ bstr]
+    left: int  ; bit vector
+])
 ```
 
 For some tree algorithms, like QLDB, the direction is derived from the hashes themselves and both the index and direction can be left out in the path:
 
 ```c
 ; TODO: find a better name for this
-UndirectionalInclusionPath = [+ bstr]
+UndirectionalInclusionPath = #6.1236([+ bstr])
 ```
 
 ```c
@@ -94,8 +93,6 @@ InclusionPath = IndexAwareInclusionPath / IndexUnawareInclusionPath / Undirectio
 Note: Including the tree size and leaf index may not be appropriate in certain privacy-focused applications as an attacker may be able to derive private information from them.
 
 TODO: Should leaf index be part of inclusion path (IndexAwareInclusionPath) or outside?
-
-TODO: How are the two types of inclusion paths distinguished?
 
 TODO: Define root computation algorithm for each inclusion path type
 
