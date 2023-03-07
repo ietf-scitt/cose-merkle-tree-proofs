@@ -15,8 +15,19 @@ class Entry:
     extra_data: Optional[bytes]
 
 
+class InclusionPath(ABC):
+    @abstractmethod
+    def encode(self) -> bytes:
+        pass
+
+    @classmethod
+    @abstractmethod
+    def decode(cls, data: bytes) -> 'InclusionPath':
+        pass
+
+
 @dataclass
-class IndexAwareInclusionPath:
+class IndexAwareInclusionPath(InclusionPath):
     TAG = 1234
 
     index: int
@@ -44,7 +55,7 @@ class IndexAwareInclusionPath:
 
 
 @dataclass
-class IndexUnawareInclusionPath:
+class IndexUnawareInclusionPath(InclusionPath):
     TAG = 1235
 
     hashes: List[bytes]
@@ -82,7 +93,7 @@ class IndexUnawareInclusionPath:
 
 
 @dataclass
-class UndirectionalInclusionPath:
+class UndirectionalInclusionPath(InclusionPath):
     TAG = 1236
 
     hashes: List[bytes]
