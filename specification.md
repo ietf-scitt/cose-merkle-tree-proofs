@@ -73,11 +73,10 @@ IndexAwareInclusionPath = #6.1234([
 Otherwise, the direction for each path step must be included:
 
 ```c
-IndexUnawareInclusionPath = #6.1235([+ PathEntry])
-PathEntry = [
-    left: bool
-    hash: bstr
-]
+IndexUnawareInclusionPath = #6.1235([
+    hashes: [+ bstr]
+    left: int  ; bit vector
+])
 ```
 
 For some tree algorithms, like QLDB, the direction is derived from the hashes themselves and both the index and direction can be left out in the path:
