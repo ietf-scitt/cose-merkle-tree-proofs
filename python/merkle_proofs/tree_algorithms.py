@@ -17,12 +17,26 @@ class Entry:
 
 @dataclass
 class IndexAwareInclusionPath:
+    TAG = 1234
+
     index: int
     hashes: List[bytes]
 
     def verify(self, tree_algorithm: 'TreeAlgorithm', root: bytes, entry_hash: bytes, tree_size: int) -> bool:
         return tree_algorithm.compute_root_from_index_aware_inclusion_path(
             entry_hash, tree_size, self) == root
+
+    def encode(self):
+        return cbor2.dumps(cbor2.CBORTag(self.TAG,
+            [self.index, self.hashes]))
+    
+    @classmethod
+    def decode(cls, data):
+        decoded = cbor2.loads(data)
+        assert isinstance(decoded, cbor2.CBORTag)
+        assert decoded.tag == cls.TAG
+        index, hashes = decoded.value
+        return cls(index=index, hashes=hashes)
 
     def __str__(self):
         short_hashes = ' '.join(h.hex()[:8] for h in self.hashes)
@@ -31,12 +45,36 @@ class IndexAwareInclusionPath:
 
 @dataclass
 class IndexUnawareInclusionPath:
+    TAG = 1235
+
     hashes: List[bytes]
     is_left: List[bool]
 
     def verify(self, tree_algorithm: 'TreeAlgorithm', root: bytes, entry_hash: bytes) -> bool:
         return tree_algorithm.compute_root_from_index_unaware_inclusion_path(
             entry_hash, self) == root
+
+    def encode(self):
+        assert len(self.hashes) == len(self.is_left)
+        assert len(self.is_left) <= 64
+        flags = 0
+        for i, is_left in enumerate(self.is_left):
+            if is_left:
+                flags |= 1 << i
+
+        return cbor2.dumps(cbor2.CBORTag(self.TAG,
+            [self.hashes, flags]))
+    
+    @classmethod
+    def decode(cls, data):
+        decoded = cbor2.loads(data)
+        assert isinstance(decoded, cbor2.CBORTag)
+        assert decoded.tag == cls.TAG
+        hashes, flags = decoded.value
+        is_left = []
+        for i in range(len(hashes)):
+            is_left.append(flags & (1 << i) != 0)
+        return cls(hashes=hashes, is_left=is_left)
 
     def __str__(self):
         short_hashes = ' '.join(h.hex()[:8] for h in self.hashes)
@@ -45,12 +83,25 @@ class IndexUnawareInclusionPath:
 
 @dataclass
 class UndirectionalInclusionPath:
+    TAG = 1236
+
     hashes: List[bytes]
 
     def verify(self, tree_algorithm: 'TreeAlgorithm', root: bytes, entry_hash: bytes) -> bool:
         return tree_algorithm.compute_root_from_undirectional_inclusion_path(
             entry_hash, self) == root
     
+    def encode(self):
+        return cbor2.dumps(cbor2.CBORTag(self.TAG, self.hashes))
+    
+    @classmethod
+    def decode(cls, data):
+        decoded = cbor2.loads(data)
+        assert isinstance(decoded, cbor2.CBORTag)
+        assert decoded.tag == cls.TAG
+        hashes = decoded.value
+        return cls(hashes=hashes)
+
     def __str__(self):
         short_hashes = ' '.join(h.hex()[:8] for h in self.hashes)
         return f'Hashes: {short_hashes}'
