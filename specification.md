@@ -216,8 +216,8 @@ For n > 1 inputs, let k be the largest power of two smaller than n.
 ```c
 MTH({d(0)}) = keccak256(keccak256(d(0)))
 MTH(D[n]) = MTH2(sorted([ MTH([d]) | d in D ]))
-MTH2({d(0)}) = d(0)
-MTH2(D[n]) = keccak256(DOT(MTH2(D[0:k]), MTH2(D[k:n])))
+MTH2({h(0)}) = h(0)
+MTH2(H[n]) = keccak256(DOT(MTH2(H[0:k]), MTH2(H[k:n])))
 DOT(H1, H2) = if H1 < H2 then H1 || H2 else H2 || H1
 ```
 
