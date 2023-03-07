@@ -80,8 +80,15 @@ PathEntry = [
 ]
 ```
 
+For some tree algorithms, like QLDB, the direction is derived from the hashes themselves and both the index and direction can be left out in the path:
+
 ```c
-InclusionPath = IndexAwareInclusionPath / IndexUnawareInclusionPath
+; TODO: find a better name for this
+UndirectionalInclusionPath = [+ bstr]
+```
+
+```c
+InclusionPath = IndexAwareInclusionPath / IndexUnawareInclusionPath / UndirectionalInclusionPath
 ```
 
 Note: Including the tree size and leaf index may not be appropriate in certain privacy-focused applications as an attacker may be able to derive private information from them.
