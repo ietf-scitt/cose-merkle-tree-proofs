@@ -64,31 +64,35 @@ Note: The payload is just the raw Merkle tree root hash (and not some wrapper st
 If the tree size and leaf index is known, then a compact inclusion path variant can be used:
 
 ```c
-IndexAwareInclusionPath = [
+IndexAwareInclusionPath = #6.1234([
     leaf_index: int
     hashes: [+ bstr]
-]
+])
 ```
 
 Otherwise, the direction for each path step must be included:
 
 ```c
-IndexUnawareInclusionPath = [+ PathEntry]
-PathEntry = [
-    left: bool
-    hash: bstr
-]
+IndexUnawareInclusionPath = #6.1235([
+    hashes: [+ bstr]
+    left: int  ; bit vector
+])
+```
+
+For some tree algorithms, like QLDB, the direction is derived from the hashes themselves and both the index and direction can be left out in the path:
+
+```c
+; TODO: find a better name for this
+UndirectionalInclusionPath = #6.1236([+ bstr])
 ```
 
 ```c
-InclusionPath = IndexAwareInclusionPath / IndexUnawareInclusionPath
+InclusionPath = IndexAwareInclusionPath / IndexUnawareInclusionPath / UndirectionalInclusionPath
 ```
 
 Note: Including the tree size and leaf index may not be appropriate in certain privacy-focused applications as an attacker may be able to derive private information from them.
 
 TODO: Should leaf index be part of inclusion path (IndexAwareInclusionPath) or outside?
-
-TODO: How are the two types of inclusion paths distinguished?
 
 TODO: Define root computation algorithm for each inclusion path type
 
@@ -132,6 +136,7 @@ Reserved        | 0     |
 CCF_SHA256      | 1     | CCF with SHA-256
 RFC6962_SHA256  | 2     | RFC6962 with SHA-256
 RFC6962_BL_SHA256  | 3     | RFC6962 with blinding and SHA-256
+QLDB_SHA256     | 4     | QLDB with SHA-256
 OZ_Keccak256    | 5     | Open Zeppelin with keccak256
 
 Each tree algorithm defines how to compute the root node from a sequence of leaves each represented by payload and extra data. Extra data is algorithm-specific and should be considered opaque.
@@ -191,6 +196,18 @@ with extra data defined as:
 ```c
 ExtraData = bstr .size 32  ; nonce
 ```
+
+### QLDB_SHA256
+
+For n > 1 inputs, let k be the largest power of two smaller than n.
+
+```c
+MTH({d(0)}) = SHA-256(d(0))
+MTH(D[n]) = SHA-256(DOT(MTH(D[0:k]), MTH(D[k:n])))
+DOT(H1, H2) = if H1 < H2 then H1 || H2 else H2 || H1
+```
+
+where `d(0)` is the payload. This algorithm takes no extra data.
 
 ### OZ_keccak256
 
