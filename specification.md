@@ -106,8 +106,8 @@ A signed Merkle tree proof is a CBOR array containing a signed tree root, an inc
 
 ```c
 SignedMerkleTreeProof = [
-  signed_tree_root: COSE_Sign1_Tagged (detached)
-  inclusion_path: InclusionPath
+  signed_tree_root: bstr .cbor COSE_Sign1_Tagged  ; detached
+  inclusion_path: bstr .cbor InclusionPath
   extra_data: bstr / nil
   payload: bstr
 ]
