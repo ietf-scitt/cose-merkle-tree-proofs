@@ -16,14 +16,26 @@ class Entry:
 
 
 class InclusionPath(ABC):
+    _types = {}
+
+    @staticmethod
+    def register_type(cls):
+        if not issubclass(cls, InclusionPath):
+            raise ValueError("Can only register subclass of InclusionPath")
+        InclusionPath._types[cls.TAG] = cls
+
     @abstractmethod
     def encode(self) -> bytes:
         pass
 
-    @classmethod
-    @abstractmethod
-    def decode(cls, data: bytes) -> 'InclusionPath':
-        pass
+    @staticmethod
+    def decode(data: bytes) -> 'InclusionPath':
+        decoded = cbor2.loads(data)
+        assert isinstance(decoded, cbor2.CBORTag)
+        tag = decoded.tag
+        if tag not in InclusionPath._types:
+            raise ValueError(f"Unknown inclusion path tag: {tag}")
+        return InclusionPath._types[tag].decode(data)
 
 
 @dataclass
@@ -52,6 +64,8 @@ class IndexAwareInclusionPath(InclusionPath):
     def __str__(self):
         short_hashes = ' '.join(h.hex()[:8] for h in self.hashes)
         return f'Hashes: {short_hashes}, Index: {self.index}'
+
+InclusionPath.register_type(IndexAwareInclusionPath)
 
 
 @dataclass
@@ -91,6 +105,8 @@ class IndexUnawareInclusionPath(InclusionPath):
         short_hashes = ' '.join(h.hex()[:8] for h in self.hashes)
         return f'Hashes: {short_hashes}, Left: {self.is_left}'
 
+InclusionPath.register_type(IndexUnawareInclusionPath)
+
 
 @dataclass
 class UndirectionalInclusionPath(InclusionPath):
@@ -117,10 +133,26 @@ class UndirectionalInclusionPath(InclusionPath):
         short_hashes = ' '.join(h.hex()[:8] for h in self.hashes)
         return f'Hashes: {short_hashes}'
 
+InclusionPath.register_type(UndirectionalInclusionPath)
+
 
 class TreeAlgorithm(ABC):
     IDENTIFIER: Union[int, str]
     SUPPORTED_INCLUSION_PATH_TYPES: List[Type]
+
+    _types = {}
+
+    @staticmethod
+    def register_type(cls):
+        if not issubclass(cls, TreeAlgorithm):
+            raise ValueError("Can only register subclass of TreeAlgorithm")
+        TreeAlgorithm._types[cls.IDENTIFIER] = cls
+
+    @staticmethod
+    def from_identifier(identifier: Union[int, str]) -> 'TreeAlgorithm':
+        if identifier not in TreeAlgorithm._types:
+            raise ValueError(f"Unknown tree algorithm identifier: {identifier}")
+        return TreeAlgorithm._types[identifier]()
 
     @abstractmethod
     def hash_entry(self, entry: Entry) -> bytes:
@@ -153,6 +185,15 @@ class TreeAlgorithm(ABC):
     @abstractmethod
     def compute_root_from_undirectional_inclusion_path(self, entry_hash: bytes, path: UndirectionalInclusionPath) -> bytes:
         pass
+
+    def compute_root_from_inclusion_path(self, path: InclusionPath, entry_hash: bytes, tree_size: Optional[int] = None) -> bytes:
+        if isinstance(path, IndexAwareInclusionPath):
+            return self.compute_root_from_index_aware_inclusion_path(entry_hash, tree_size, path)
+        if isinstance(path, IndexUnawareInclusionPath):
+            return self.compute_root_from_index_unaware_inclusion_path(entry_hash, path)
+        if isinstance(path, UndirectionalInclusionPath):
+            return self.compute_root_from_undirectional_inclusion_path(entry_hash, path)
+        raise ValueError(f"Unsupported inclusion path type: {path}")
 
 
 class CommonTreeAlgorithm(TreeAlgorithm):
@@ -290,6 +331,8 @@ class CCFSha256TreeAlgorithm(BaseCCFTreeAlgorithm):
     def __init__(self):
         super().__init__(SHA256)
 
+TreeAlgorithm.register_type(CCFSha256TreeAlgorithm)
+
 
 class BaseRFC6962TreeAlgorithm(CommonTreeAlgorithm):
     SUPPORTED_INCLUSION_PATH_TYPES = [
@@ -313,6 +356,8 @@ class RFC6962Sha256TreeAlgorithm(BaseRFC6962TreeAlgorithm):
 
     def __init__(self):
         super().__init__(SHA256)
+
+TreeAlgorithm.register_type(RFC6962Sha256TreeAlgorithm)
 
 
 class BaseQldbTreeAlgorithm(CommonTreeAlgorithm):
@@ -340,6 +385,8 @@ class QldbSha256TreeAlgorithm(BaseQldbTreeAlgorithm):
 
     def __init__(self):
         super().__init__(SHA256)
+
+TreeAlgorithm.register_type(QldbSha256TreeAlgorithm)
 
 
 class BaseOpenZeppelinTreeAlgorithm(CommonTreeAlgorithm):
@@ -382,6 +429,8 @@ class OpenZeppelinKeccak256TreeAlgorithm(BaseOpenZeppelinTreeAlgorithm):
     def __init__(self):
         # TODO is keccak256 the same as sha3_256?
         super().__init__(SHA3_256)
+
+TreeAlgorithm.register_type(OpenZeppelinKeccak256TreeAlgorithm)
 
 
 # Note that for new systems, Bitcoin's Merkle tree algorithm
@@ -432,3 +481,5 @@ class BitcoinSha256TreeAlgorithm(BaseBitcoinTreeAlgorithm):
 
     def __init__(self):
         super().__init__(SHA256)
+
+TreeAlgorithm.register_type(BitcoinSha256TreeAlgorithm)

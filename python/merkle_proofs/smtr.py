@@ -26,7 +26,8 @@ def sign_tree_root(root: bytes, tree_alg: ta.TreeAlgorithm, key, alg, tree_size=
 
 
 def detach_cose_sign1_payload(msg):
-    # pycose doesn't support detached payloads, so we have to do it manually.
+    # pycose doesn't support detached payloads yet, see:
+    # https://github.com/TimothyClaeys/pycose/pull/110
     decoded = cbor2.loads(msg)
     assert decoded.tag == Sign1Message.cbor_tag
     [phdr, uhdr, _, signature] = decoded.value
@@ -35,6 +36,21 @@ def detach_cose_sign1_payload(msg):
         phdr,
         uhdr,
         None,
+        signature,
+    ])
+    return cbor2.dumps(detached)
+
+def attach_cose_sign1_payload(msg, payload):
+    # pycose doesn't support detached payloads yet, see:
+    # https://github.com/TimothyClaeys/pycose/pull/110
+    decoded = cbor2.loads(msg)
+    assert decoded.tag == Sign1Message.cbor_tag
+    [phdr, uhdr, _, signature] = decoded.value
+
+    detached = cbor2.CBORTag(Sign1Message.cbor_tag, [
+        phdr,
+        uhdr,
+        payload,
         signature,
     ])
     return cbor2.dumps(detached)
